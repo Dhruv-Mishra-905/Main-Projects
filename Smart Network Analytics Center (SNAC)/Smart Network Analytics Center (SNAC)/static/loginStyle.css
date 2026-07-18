@@ -1,0 +1,252 @@
+* {
+    box-sizing: border-box;
+}
+
+html {
+    min-height: 100%;
+}
+
+body {
+    min-height: 100vh;
+    margin: 0;
+    padding: 28px clamp(16px, 4vw, 44px);
+    background: linear-gradient(135deg, #0f172a, #111827, #1e1b4b);
+    font-family: Arial, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+label,
+a {
+    color: rgb(165, 201, 233);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    width: min(1180px, 100%);
+    margin: 0 auto 56px;
+}
+
+.logo h1,
+.logo h4 {
+    margin: 0;
+}
+
+.logoImage {
+    width: clamp(72px, 10vw, 120px);
+    height: clamp(72px, 10vw, 120px);
+    flex: 0 0 auto;
+    border-radius: 50%;
+    box-shadow: 0 0 20px cyan;
+}
+
+.mainContainer {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(320px, 450px);
+    gap: clamp(28px, 5vw, 70px);
+    align-items: center;
+    width: min(1180px, 100%);
+    margin: 0 auto;
+}
+
+.intro,
+.loginbox {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(139, 92, 246, 0.18));
+    border: 3px solid black;
+    border-radius: 32px;
+}
+
+.intro {
+    min-height: 350px;
+    padding: clamp(28px, 5vw, 48px);
+}
+
+.headDeclaration {
+    margin: 0 0 18px;
+    font-size: clamp(22px, 3.5vw, 34px);
+}
+
+.declaration {
+    margin: 0 0 32px;
+    font-size: clamp(15px, 2vw, 17px);
+    line-height: 1.6;
+    font-weight: normal;
+}
+
+.features {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 10px 14px;
+    background-color: rgb(17, 42, 92);
+    border: 1px solid red;
+    border-radius: 9px;
+    color: rgb(165, 201, 233);
+    text-align: center;
+}
+
+.loginbox {
+    width: 100%;
+    min-height: 520px;
+    padding: 34px clamp(24px, 4vw, 58px);
+}
+
+.loginbox h2,
+.loginbox h4 {
+    text-align: center;
+}
+
+.loginbox p {
+    align-self: flex-start;
+    margin: 18px 0 6px;
+}
+
+.email,
+.password,
+.login {
+    width: 100%;
+}
+
+.email,
+.password {
+    height: 44px;
+    padding: 0 15px;
+    color: rgb(176, 201, 227);
+    background-color: #1e1e1e;
+    border: 1px solid rgb(89, 38, 99);
+    border-radius: 12px;
+}
+
+input::placeholder {
+    color: rgb(180, 180, 180);
+}
+
+.rememberSection {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 15px;
+}
+
+.rememberSection input {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.rememberSection label {
+    font-size: 14px;
+}
+
+.forgotPassword {
+    display: block;
+    margin-top: 12px;
+    text-align: right;
+    text-decoration: none;
+    color: blueviolet;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.forgotPassword:hover {
+    text-decoration: underline;
+}
+
+.login {
+    margin-top: 25px;
+    height: 45px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.login:hover {
+    transform: scale(1.03);
+    background-color: rgb(118, 43, 188);
+}
+
+.loginMessage {
+    min-height: 20px;
+    margin-top: 12px;
+    color: #ffb4b4;
+}
+
+.login:disabled {
+    cursor: wait;
+    opacity: 0.7;
+}
+
+@media (max-width: 900px) {
+    body {
+        padding-top: 22px;
+    }
+
+    .logo {
+        margin-bottom: 34px;
+    }
+
+    .mainContainer {
+        grid-template-columns: 1fr;
+    }
+
+    .intro {
+        min-height: auto;
+    }
+
+    .loginbox {
+        max-width: 540px;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 560px) {
+    body {
+        padding: 18px 14px;
+    }
+
+    .logo {
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .logo h1 {
+        font-size: 28px;
+    }
+
+    .logo h4 {
+        font-size: 14px;
+    }
+
+    .intro,
+    .loginbox {
+        border-radius: 22px;
+        border-width: 2px;
+    }
+
+    .features {
+        grid-template-columns: 1fr;
+    }
+
+    .loginbox {
+        min-height: auto;
+        padding: 28px 20px;
+    }
+}

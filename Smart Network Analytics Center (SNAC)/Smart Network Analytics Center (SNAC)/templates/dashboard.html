@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NetPulse Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboardStyle.css') }}">
+</head>
+
+<body>
+    <div class="mainContainer">
+        <div class="sidebar">
+            <div class="logo">
+                <img src="/SNMS.png" class="logoImage" alt="NetPulse Logo">
+                <div>
+                    <h2>NetPulse</h2>
+                    <h6>NOC Dashboard</h6>
+                </div>
+            </div>
+            <div class="navbar">
+                <p class="navbarButton" id="dashboardBtn">Dashboard</p>
+                <p class="navbarButton" id="devicesBtn">Devices</p>
+                <p class="navbarButton" id="networkMapBtn">Network Map</p>
+                <p class="navbarButton" id="analyticsBtn">Analytics</p>
+                <p class="navbarButton" id="settingsBtn">Settings</p>
+                <p class="navbarButton" id="logoutBtn">Logout</p>
+            </div>
+        </div>
+        <div class="content">
+            <section id="dashboardOverview">
+                <div class="description">
+                    <h1>Network Operations Center</h1>
+                    <h4>Real-time monitoring and analytics</h4>
+                    <div class="clockContainer">
+                        <h2 id="clock">00:00:00</h2>
+                    </div>
+                </div>
+                <div class="cards">
+                    <div class="card">
+                        <h2 id="totalDevices">0</h2>
+                        <p>Total devices</p>
+                    </div>
+                    <div class="card">
+                        <h2 id="activeDevices">0</h2>
+                        <p>Active devices</p>
+                    </div>
+                    <div class="card">
+                        <h2 id="offlineDevices">0</h2>
+                        <p>Offline devices</p>
+                    </div>
+                    <div class="card">
+                        <h2 id="networkHealth">0%</h2>
+                        <p>Network Health</p>
+                    </div>
+                    <div class="card">
+                        <h2 id="latency">0ms</h2>
+                        <p>Avg Latency</p>
+                    </div>
+                    <div class="card">
+                        <h2 id="traffic">0GB</h2>
+                        <p>Traffic Usage</p>
+                    </div>
+                </div>
+                <div class="alertBox" id="alertBox">
+                    Network Status Normal
+                </div>
+            </section>
+            <div class="deviceSection" id="deviceSection">
+                <h2>Connected Devices</h2>
+                <input
+                    type="search"
+                    id="deviceSearch"
+                    class="deviceSearch"
+                    placeholder="Search devices by name, IP address, MAC address, or type"
+                >
+                <table class="deviceTable">
+                    <thead>
+                        <tr>
+                            <th>Device</th>
+                            <th>Status</th>
+                            <th>IP Address</th>
+                            <th>MAC Address</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody id="deviceBody"></tbody>
+                </table>
+            </div>
+            <section class="analyticsSection" id="analyticsSection">
+                <div class="analyticsHeader">
+                    <h2>Network Analytics</h2>
+                    <p>Operational visibility across device health, latency, and traffic usage.</p>
+                </div>
+                <div class="analyticsGrid">
+                    <div class="chartCard">
+                        <h3>Device Status Distribution</h3>
+                        <canvas id="deviceStatusChart"></canvas>
+                    </div>
+                    <div class="chartCard">
+                        <h3>Network Latency Trend</h3>
+                        <canvas id="latencyTrendChart"></canvas>
+                    </div>
+                </div>
+                <div class="chartCard chartCardWide">
+                    <h3>Traffic Usage</h3>
+                    <canvas id="trafficUsageChart"></canvas>
+                </div>
+            </section>
+            <section class="networkMapSection" id="networkMapSection">
+                <div class="networkMapHeader">
+                    <h2>Network Topology Map</h2>
+                    <p>Live device status mapped into a professional NOC-style topology view.</p>
+                </div>
+                <div class="topologyCanvas" id="topologyCanvas"></div>
+                <aside class="nodeDetailsPanel" id="nodeDetailsPanel">
+                    <button class="nodeDetailsClose" type="button" id="nodeDetailsClose">Close</button>
+                    <h3 id="detailDeviceName">Select a device</h3>
+                    <p><span>IP Address</span><strong id="detailIpAddress">-</strong></p>
+                    <p><span>MAC Address</span><strong id="detailMacAddress">-</strong></p>
+                    <p><span>Status</span><strong id="detailStatus">-</strong></p>
+                    <p><span>Device Type</span><strong id="detailDeviceType">-</strong></p>
+                    <p><span>Latency</span><strong id="detailLatency">-</strong></p>
+                    <p><span>Last Seen</span><strong id="detailLastSeen">-</strong></p>
+                </aside>
+            </section>
+            <section class="settingsSection" id="settingsSection">
+                <div class="settingsHeader">
+                    <h2>Settings</h2>
+                    <p>Manage monitoring preferences and system settings.</p>
+                </div>
+                <div class="settingsGrid">
+                    <div class="settingsCard">
+                        <h3>Monitoring Configuration</h3>
+                        <label for="scanInterval">Refresh Interval</label>
+                        <select id="scanInterval" class="settingsControl">
+                            <option value="10000">10 seconds</option>
+                            <option value="30000">30 seconds</option>
+                            <option value="60000">1 minute</option>
+                            <option value="300000">5 minutes</option>
+                        </select>
+
+                        <label for="pingTimeout">Ping Timeout</label>
+                        <select id="pingTimeout" class="settingsControl">
+                            <option value="1000">1 second</option>
+                            <option value="3000">3 seconds</option>
+                            <option value="5000">5 seconds</option>
+                        </select>
+
+                        <label class="settingsCheck">
+                            <input type="checkbox" id="autoRefresh">
+                            <span>Enable Auto Refresh</span>
+                        </label>
+                    </div>
+
+                    <div class="settingsCard">
+                        <h3>Alert Configuration</h3>
+                        <label for="latencyThreshold">Latency Threshold</label>
+                        <div class="numberWithUnit">
+                            <input type="number" id="latencyThreshold" class="settingsControl" value="50" min="1">
+                            <span>ms</span>
+                        </div>
+
+                        <label class="settingsCheck">
+                            <input type="checkbox" id="offlineAlerts">
+                            <span>Enable Offline Device Alerts</span>
+                        </label>
+
+                        <label class="settingsCheck">
+                            <input type="checkbox" id="emailNotifications">
+                            <span>Enable Email Notifications</span>
+                        </label>
+                    </div>
+
+                    <div class="settingsCard">
+                        <h3>Appearance</h3>
+                        <div class="themeOptions">
+                            <label class="themeOption">
+                                <input type="radio" name="themeSelector" value="cyber" id="themeCyber">
+                                <span>Cyber Blue</span>
+                            </label>
+                            <label class="themeOption">
+                                <input type="radio" name="themeSelector" value="dark" id="themeDark">
+                                <span>Dark Mode</span>
+                            </label>
+                            <label class="themeOption">
+                                <input type="radio" name="themeSelector" value="light" id="themeLight">
+                                <span>Light Mode</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="settingsCard systemInfoCard">
+                        <h3>System Information</h3>
+                        <p><span>NetPulse Version</span><strong>1.0</strong></p>
+                        <p><span>Backend</span><strong>Flask</strong></p>
+                        <p><span>Database</span><strong>SQLite</strong></p>
+                        <p><span>System Status</span><strong class="systemRunning">Running</strong></p>
+                        <p><span>Current Time</span><strong id="settingsCurrentTime">--:--:--</strong></p>
+                        <p><span>Last Scan</span><strong id="lastScanTime">Not Available</strong></p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    <footer class="dashboardFooter">
+        <h3 class="footerProjectName">NetPulse v1.0</h3>
+        <p>Smart Network Analytics Center (SNAC)</p>
+        <p>Developed by Nilabh Madhav Mishra</p>
+        <p><a href="mailto:nilabhmadhavmishra88@gmail.com">nilabhmadhavmishra88@gmail.com</a></p>
+        <p>Internship Project - Usha Martin Limited</p>
+        <p class="footerCopyright">&copy; 2026 NetPulse. All Rights Reserved.</p>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='dashboardScript.js') }}"></script>
+</body>
+</html>

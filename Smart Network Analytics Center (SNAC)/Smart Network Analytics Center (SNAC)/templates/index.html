@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>NetPulse Login</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="{{ url_for('static', filename='loginStyle.css') }}">
+    </head>
+    <body>
+        <div class="logo">
+            <img src="/SNMS.png" alt="NetPulse Logo" class="logoImage">
+            <div>
+                <h1>NetPulse</h1>
+                <h4>Smart Network Analytics Center (SNAC)</h4>
+            </div>
+        </div>
+        <div class="mainContainer">
+            <div class="intro">
+                <h3 class="headDeclaration">Real Time Network Intelligence</h3>
+                <h6 class="declaration">Monitor, analyze, and optimize your entire network infrastructure from a <br>single powerful dashboard.</h6>
+                <div class="features">
+                    <div class="box">Device Monitoring</div>
+                    <div class="box">Live Analytics</div>
+                    <div class="box">Network Topology</div>
+                    <div class="box">Security Alerts</div>
+                </div>
+            </div>
+            <div class="loginbox">
+                <h2>Welcome Back</h2>
+                <h4>Sign in to your dashboard</h4>
+                <p>User ID</p>
+                <input type="email" placeholder="Enter User ID" class="email" id="email">
+                <p>Password</p>
+                <input type="password" placeholder="Enter Password" class="password" id="password">
+                <div class="rememberSection">
+                    <input type="checkbox" id="remember">
+                    <label for="remember">Remember Me</label>
+                </div>
+                <a href="#" class="forgotPassword">Forgot Password?</a>
+                <button class="login" id="loginBtn">Login</button>
+                <p id="loginMessage" class="loginMessage"></p>
+            </div>
+        </div>
+        <script src="{{ url_for('static', filename='loginStyle.js') }}"></script>
+    </body>
+</html>
