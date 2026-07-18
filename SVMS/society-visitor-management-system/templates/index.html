@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Society Visitor Management System{% endblock %}
+
+{% block content %}
+<div class="hero-card">
+    <h2>Welcome to SVMS</h2>
+    <p>Manage visitors, approvals, and community access from one secure dashboard.</p>
+    <div class="hero-actions">
+        <a href="{{ url_for('login') }}" class="btn btn-primary">Login</a>
+        <a href="{{ url_for('register') }}" class="btn btn-secondary">Register</a>
+    </div>
+</div>
+{% endblock %}

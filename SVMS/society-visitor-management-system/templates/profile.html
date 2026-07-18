@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile - SVMS{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div>
+        <span class="role-chip">{{ user.role|title if user else 'Account' }}</span>
+        <h2>Profile Settings</h2>
+        <p>Keep your contact and flat details updated for visitor and meeting workflows.</p>
+    </div>
+    <a href="{{ url_for('owner_dashboard' if session.get('role') == 'owner' else 'guard_dashboard' if session.get('role') == 'guard' else 'user_dashboard') }}" class="btn btn-outline">Back to Dashboard</a>
+</div>
+
+<div class="card card-wide">
+    <div class="card-header">
+        <h2>Account Details</h2>
+        <p>{{ user.username }}</p>
+    </div>
+    <form action="{{ url_for('profile') }}" method="post">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="full_name">Full Name</label>
+                <input id="full_name" name="full_name" value="{{ user.full_name or '' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" value="{{ user.email or '' }}">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="phone">Phone</label>
+                <input id="phone" name="phone" value="{{ user.phone or '' }}">
+            </div>
+            <div class="form-group">
+                <label for="flat_no">Flat Number</label>
+                <input id="flat_no" name="flat_no" value="{{ user.flat_no or '' }}" {% if user.role == 'guard' %}placeholder="Gate staff"{% endif %}>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="wing">Wing / Block</label>
+                <input id="wing" name="wing" value="{{ user.wing or '' }}">
+            </div>
+            <div class="form-group">
+                <label for="tower_name">Tower Name</label>
+                <input id="tower_name" name="tower_name" value="{{ user.tower_name or '' }}">
+            </div>
+        </div>
+        <button type="submit" class="btn">Save Profile</button>
+    </form>
+</div>
+{% endblock %}

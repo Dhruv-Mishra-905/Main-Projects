@@ -1,0 +1,437 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - SVMS{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div>
+        <span class="role-chip">Admin</span>
+        <h2>Society Dashboard</h2>
+        <p>Welcome, {{ username }}. Review approvals, manage users, track visitors, and post society updates from one clean workspace.</p>
+    </div>
+    <div class="header-actions">
+        <a href="#approvals" class="btn">Approvals</a>
+        <a href="#users" class="btn btn-outline">Users</a>
+    </div>
+</div>
+
+<div class="stats-grid stats-grid-wide">
+    <div class="stat-card">
+        <span class="stat-kicker">Admins</span>
+        <div class="stat-value">{{ stats.owners }}</div>
+        <div class="stat-label">Admin accounts</div>
+    </div>
+    <div class="stat-card">
+        <span class="stat-kicker">Guards</span>
+        <div class="stat-value">{{ stats.guards }}</div>
+        <div class="stat-label">Gate staff</div>
+    </div>
+    <div class="stat-card">
+        <span class="stat-kicker">Residents</span>
+        <div class="stat-value">{{ stats.residents }}</div>
+        <div class="stat-label">Approved members</div>
+    </div>
+    <div class="stat-card">
+        <span class="stat-kicker">Visitors</span>
+        <div class="stat-value">{{ stats.visitors }}</div>
+        <div class="stat-label">Total requests</div>
+    </div>
+    <div class="stat-card">
+        <span class="stat-kicker">Pending</span>
+        <div class="stat-value">{{ stats.pending_approvals }}</div>
+        <div class="stat-label">New registrations</div>
+    </div>
+    <div class="stat-card">
+        <span class="stat-kicker">Alerts</span>
+        <div class="stat-value">{{ stats.open_alerts }}</div>
+        <div class="stat-label">Open emergencies</div>
+    </div>
+</div>
+
+<div class="dashboard-layout">
+    <aside class="side-panel">
+        <div class="side-panel-title">Admin Tools</div>
+        <a href="#approvals">Approvals</a>
+        <a href="#users">Users</a>
+        <a href="#visitors">Visitors</a>
+        <a href="#flats">Flats</a>
+        <a href="#meetings">Meetings</a>
+        <a href="#notices">Notices</a>
+        <a href="#activity">Activity</a>
+    </aside>
+
+    <div class="workspace-stack">
+        <section id="approvals" class="workspace-panel">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">Review</span>
+                    <h3>Resident Approvals</h3>
+                    <p>Verify new residents before they can access the system.</p>
+                </div>
+            </div>
+
+            {% if pending_requests %}
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Resident</th>
+                                <th>Contact</th>
+                                <th>Flat</th>
+                                <th>Verification</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for req in pending_requests %}
+                            <tr>
+                                <td>
+                                    <strong>{{ req.full_name or req.username }}</strong>
+                                    <br><span class="muted">{{ req.username }}</span>
+                                </td>
+                                <td>
+                                    {{ req.email or '-' }}
+                                    <br><span class="muted">{{ req.phone or '-' }}</span>
+                                </td>
+                                <td>
+                                    {{ req.flat_no or '-' }}
+                                    <br><span class="muted">{{ req.tower_name or 'No tower' }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge {% if req.email_verified %}badge-success{% else %}badge-warning{% endif %}">Email</span>
+                                    <span class="badge {% if req.phone_verified %}badge-success{% else %}badge-warning{% endif %}">Phone</span>
+                                </td>
+                                <td>
+                                    <div class="action-group">
+                                        <a href="{{ url_for('request_detail', req_id=req.id) }}" class="btn btn-sm btn-outline">View</a>
+                                        <form action="{{ url_for('approve_request', req_id=req.id) }}" method="post">
+                                            <button class="btn btn-sm btn-success" type="submit">Approve</button>
+                                        </form>
+                                        <form action="{{ url_for('reject_request', req_id=req.id) }}" method="post">
+                                            <button class="btn btn-sm btn-danger" type="submit">Reject</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state compact-empty">No resident approvals are waiting.</div>
+            {% endif %}
+        </section>
+
+        <section id="users" class="workspace-panel">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">Access</span>
+                    <h3>Manage Users</h3>
+                    <p>Add admins, guards, and residents or reset access when needed.</p>
+                </div>
+            </div>
+
+            <form action="{{ url_for('owner_add_user') }}" method="post" class="inline-form-grid">
+                <input name="full_name" placeholder="Full name" required>
+                <input name="username" placeholder="Username or email" required>
+                <input name="email" placeholder="Email">
+                <input name="phone" placeholder="Phone">
+                <select name="role" required>
+                    <option value="user">Resident</option>
+                    <option value="guard">Guard</option>
+                    <option value="owner">Admin</option>
+                </select>
+                <input name="password" type="password" placeholder="Password" minlength="6" required>
+                <input name="flat_no" placeholder="Flat no">
+                <input name="wing" placeholder="Wing">
+                <input name="tower_name" placeholder="Tower">
+                <button type="submit" class="btn">Add User</button>
+            </form>
+
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Flat</th>
+                            <th>Contact</th>
+                            <th>Reset Password</th>
+                            <th>Remove</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for user in users %}
+                        <tr>
+                            <td>
+                                <strong>{{ user.full_name }}</strong>
+                                <br><span class="muted">{{ user.username }}</span>
+                            </td>
+                            <td><span class="badge badge-neutral">{{ 'Admin' if user.role == 'owner' else user.role|title }}</span></td>
+                            <td>
+                                {{ user.flat_no or '-' }}
+                                <br><span class="muted">{{ user.tower_name or '-' }}</span>
+                            </td>
+                            <td>
+                                {{ user.phone or '-' }}
+                                <br><span class="muted">{{ user.email or '-' }}</span>
+                            </td>
+                            <td>
+                                <form action="{{ url_for('owner_reset_password', user_id=user.id) }}" method="post" class="micro-form">
+                                    <input name="new_password" type="password" placeholder="New password" minlength="6" required>
+                                    <button class="btn btn-sm btn-outline" type="submit">Reset</button>
+                                </form>
+                            </td>
+                            <td>
+                                {% if user.id != session.get('user_id') %}
+                                    <form action="{{ url_for('owner_delete_user', user_id=user.id) }}" method="post">
+                                        <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+                                    </form>
+                                {% else %}
+                                    <span class="muted">Current user</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="visitors" class="workspace-panel">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">Gate</span>
+                    <h3>Visitor Requests</h3>
+                    <p>See the latest visitor activity and approve urgent pending requests.</p>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Visitor</th>
+                            <th>Resident</th>
+                            <th>Purpose</th>
+                            <th>Status</th>
+                            <th>Token</th>
+                            <th>Gate Time</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for visitor in visitor_requests %}
+                        <tr>
+                            <td>
+                                <strong>{{ visitor.visitor_name }}</strong>
+                                <br><span class="muted">{{ visitor.visitor_phone or '-' }}</span>
+                            </td>
+                            <td>
+                                {{ visitor.resident_full_name or visitor.resident_name or '-' }}
+                                <br><span class="muted">{{ visitor.flat_no or '-' }}</span>
+                            </td>
+                            <td>{{ visitor.purpose or '-' }}</td>
+                            <td><span class="badge badge-{{ visitor.status }}">{{ visitor.status|title }}</span></td>
+                            <td>{{ visitor.token or '-' }}</td>
+                            <td>
+                                <span class="muted">In:</span> {{ visitor.check_in_at or '-' }}
+                                <br><span class="muted">Out:</span> {{ visitor.check_out_at or '-' }}
+                            </td>
+                            <td>
+                                {% if visitor.status == 'pending' %}
+                                    <div class="action-group">
+                                        <form action="{{ url_for('decide_visitor', visitor_id=visitor.id) }}" method="post">
+                                            <input type="hidden" name="action" value="approved">
+                                            <button class="btn btn-sm btn-success" type="submit">Approve</button>
+                                        </form>
+                                        <form action="{{ url_for('decide_visitor', visitor_id=visitor.id) }}" method="post">
+                                            <input type="hidden" name="action" value="rejected">
+                                            <button class="btn btn-sm btn-danger" type="submit">Reject</button>
+                                        </form>
+                                    </div>
+                                {% else %}
+                                    <span class="muted">Recorded</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="7">No visitor requests yet.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="flats" class="workspace-panel">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">Society</span>
+                    <h3>Flats and Blocks</h3>
+                    <p>Maintain flat ownership and occupancy details.</p>
+                </div>
+            </div>
+
+            <form action="{{ url_for('owner_add_flat') }}" method="post" class="inline-form-grid">
+                <input name="flat_no" placeholder="Flat no" required>
+                <input name="wing" placeholder="Wing">
+                <input name="floor_no" placeholder="Floor">
+                <input name="tower_name" placeholder="Tower">
+                <select name="owner_user_id">
+                    <option value="">Unassigned</option>
+                    {% for resident in residents %}
+                        <option value="{{ resident.id }}">{{ resident.full_name }} - {{ resident.flat_no or 'No flat' }}</option>
+                    {% endfor %}
+                </select>
+                <select name="status">
+                    <option value="vacant">Vacant</option>
+                    <option value="occupied">Occupied</option>
+                    <option value="maintenance">Maintenance</option>
+                </select>
+                <button type="submit" class="btn">Save Flat</button>
+            </form>
+
+            <div class="mini-grid">
+                {% for flat in flats %}
+                    <div class="mini-card">
+                        <strong>{{ flat.flat_no }}</strong>
+                        <span>{{ flat.tower_name or 'Society' }}{% if flat.wing %}, Wing {{ flat.wing }}{% endif %}</span>
+                        <em>{{ flat.owner_name or 'Unassigned' }}</em>
+                        <span class="badge badge-{{ flat.status or 'vacant' }}">{{ (flat.status or 'vacant')|title }}</span>
+                    </div>
+                {% else %}
+                    <div class="empty-state compact-empty">No flats saved yet.</div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section id="meetings" class="workspace-panel">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">Meetings</span>
+                    <h3>Resident Meeting Requests</h3>
+                    <p>Track incoming meeting requests between residents.</p>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Requester</th>
+                            <th>Target</th>
+                            <th>Purpose</th>
+                            <th>Schedule</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for meeting in meeting_requests %}
+                        <tr>
+                            <td>{{ meeting.requester_name or '-' }}</td>
+                            <td>{{ meeting.target_name or '-' }}</td>
+                            <td>{{ meeting.purpose or '-' }}</td>
+                            <td>{{ meeting.requested_date or '-' }} {{ meeting.requested_time or '' }}</td>
+                            <td><span class="badge badge-{{ meeting.status }}">{{ meeting.status|title }}</span></td>
+                            <td>
+                                {% if meeting.status == 'pending' %}
+                                    <div class="action-group">
+                                        <form action="{{ url_for('decide_meeting', meeting_id=meeting.id) }}" method="post">
+                                            <input type="hidden" name="action" value="approved">
+                                            <button class="btn btn-sm btn-success" type="submit">Approve</button>
+                                        </form>
+                                        <form action="{{ url_for('decide_meeting', meeting_id=meeting.id) }}" method="post">
+                                            <input type="hidden" name="action" value="rejected">
+                                            <button class="btn btn-sm btn-danger" type="submit">Reject</button>
+                                        </form>
+                                    </div>
+                                {% else %}
+                                    <span class="muted">Closed</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="6">No meeting requests yet.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="notices" class="workspace-panel">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">Updates</span>
+                    <h3>Notices</h3>
+                    <p>Post maintenance, security, and society announcements.</p>
+                </div>
+            </div>
+
+            <form action="{{ url_for('owner_add_notice') }}" method="post" class="notice-form">
+                <input name="title" placeholder="Notice title" required>
+                <select name="category">
+                    <option value="general">General</option>
+                    <option value="maintenance">Maintenance</option>
+                    <option value="security">Security</option>
+                    <option value="alert">Emergency</option>
+                </select>
+                <textarea name="body" placeholder="Notice details"></textarea>
+                <button type="submit" class="btn">Post Notice</button>
+            </form>
+
+            <div class="notice-feed">
+                {% for notice in notices %}
+                    <div class="feed-item">
+                        <strong>{{ notice.title }}</strong>
+                        <span>{{ notice.category|title }} &middot; {{ notice.creator_name or 'Admin' }} &middot; {{ notice.created_at }}</span>
+                        <p>{{ notice.body }}</p>
+                    </div>
+                {% else %}
+                    <div class="empty-state compact-empty">No notices posted yet.</div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section id="activity" class="workspace-panel">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">Audit</span>
+                    <h3>Alerts and Activity</h3>
+                    <p>Recent emergency alerts and system activity.</p>
+                </div>
+            </div>
+
+            <div class="split-grid">
+                <div>
+                    <h4 class="subheading">Emergency Alerts</h4>
+                    <div class="notice-feed compact-feed">
+                        {% for alert in alerts %}
+                            <div class="feed-item">
+                                <strong>{{ alert.message }}</strong>
+                                <span>{{ alert.guard_name or 'Guard' }} &middot; {{ alert.created_at }}</span>
+                            </div>
+                        {% else %}
+                            <p class="muted">No emergency alerts.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div>
+                    <h4 class="subheading">Activity Logs</h4>
+                    <div class="timeline">
+                        {% for log in logs %}
+                            <div class="timeline-item">
+                                <strong>{{ log.action }}</strong>
+                                <span>{{ log.actor_name or 'System' }} &middot; {{ 'admin' if log.actor_role == 'owner' else log.actor_role or 'system' }} &middot; {{ log.created_at }}</span>
+                                <p>{{ log.details }}</p>
+                            </div>
+                        {% else %}
+                            <p class="muted">No activity yet.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
