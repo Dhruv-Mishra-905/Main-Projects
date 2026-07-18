@@ -1,0 +1,348 @@
+{% extends 'base.html' %}
+
+{% block title %}Guard Dashboard - SVMS{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div>
+        <span class="role-chip">Guard</span>
+        <h2>Gate Operations</h2>
+        <p>Welcome, {{ username }}. Register visitors, find residents, and handle check-in or check-out from the gate.</p>
+    </div>
+    <div class="header-actions">
+        <a href="#add-visitor" class="btn">Add Visitor</a>
+        <a href="#movement" class="btn btn-outline">Visitor Pass</a>
+        <a href="#requests" class="btn btn-outline">Requests</a>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <span class="stat-kicker">Today</span>
+        <div class="stat-value">{{ stats.today }}</div>
+        <div class="stat-label">Visitor requests</div>
+    </div>
+    <div class="stat-card">
+        <span class="stat-kicker">Pending</span>
+        <div class="stat-value">{{ stats.pending }}</div>
+        <div class="stat-label">Waiting for residents</div>
+    </div>
+    <div class="stat-card">
+        <span class="stat-kicker">Approved</span>
+        <div class="stat-value">{{ stats.approved }}</div>
+        <div class="stat-label">Ready for entry</div>
+    </div>
+    <div class="stat-card">
+        <span class="stat-kicker">Inside</span>
+        <div class="stat-value">{{ stats.checked_in }}</div>
+        <div class="stat-label">Currently checked in</div>
+    </div>
+</div>
+
+<div class="dashboard-layout">
+    <aside class="side-panel">
+        <div class="side-panel-title">Guard Tools</div>
+        <a href="#add-visitor">Add visitor</a>
+        <a href="#resident-search">Residents</a>
+        <a href="#requests">Requests</a>
+        <a href="#movement">Visitor Pass</a>
+        <a href="#emergency">Emergency</a>
+    </aside>
+
+    <div class="workspace-stack">
+        <section id="add-visitor" class="workspace-panel">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">Entry</span>
+                    <h3>Register Visitor</h3>
+                    <p>Create a visitor request and send it to the selected resident.</p>
+                </div>
+            </div>
+
+            <form action="{{ url_for('add_visitor_request') }}" method="post" enctype="multipart/form-data" class="form-grid-large">
+                <div class="form-group">
+                    <label for="visitor_name">Visitor Name</label>
+                    <input id="visitor_name" name="visitor_name" placeholder="Visitor name" required>
+                </div>
+                <div class="form-group">
+                    <label for="visitor_phone">Phone</label>
+                    <input id="visitor_phone" name="visitor_phone" placeholder="10-digit phone">
+                </div>
+                <div class="form-group">
+                    <label for="resident_id">Resident / Flat</label>
+                    <select id="resident_id" name="resident_id" required>
+                        <option value="">Select resident</option>
+                        {% for resident in residents %}
+                            <option value="{{ resident.id }}">{{ resident.full_name }} - {{ resident.flat_no or 'No flat' }} - {{ resident.tower_name or 'Society' }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="vehicle_number">Vehicle Number</label>
+                    <input id="vehicle_number" name="vehicle_number" placeholder="Optional">
+                </div>
+                <div class="form-group">
+                    <label for="id_proof_number">ID Proof Number</label>
+                    <input id="id_proof_number" name="id_proof_number" placeholder="Optional">
+                </div>
+                <div class="form-group span-2">
+                    <label for="purpose">Purpose</label>
+                    <textarea id="purpose" name="purpose" placeholder="Delivery, guest visit, service work, cab pickup"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>ID Proof</label>
+                    <div class="file-input-wrap">
+                        <input type="file" name="id_proof" accept=".pdf,.png,.jpg,.jpeg">
+                        <div class="file-input-label"><strong>Upload</strong> optional ID proof</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Visitor Photo</label>
+                    <div class="file-input-wrap">
+                        <input type="file" name="visitor_photo" accept=".png,.jpg,.jpeg">
+                        <div class="file-input-label"><strong>Upload</strong> optional visitor photo</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>&nbsp;</label>
+                    <button type="submit" class="btn btn-block">Send Request</button>
+                </div>
+            </form>
+        </section>
+
+        <section id="resident-search" class="workspace-panel">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">Directory</span>
+                    <h3>Find Resident</h3>
+                    <p>Search by flat number, name, phone, or username.</p>
+                </div>
+            </div>
+
+            <form method="get" action="{{ url_for('guard_dashboard') }}" class="search-row">
+                <input name="resident_search" value="{{ resident_search }}" placeholder="Search A-101, Aman, phone">
+                <button class="btn btn-outline" type="submit">Search</button>
+            </form>
+
+            <div class="mini-grid">
+                {% for resident in residents %}
+                    <div class="mini-card">
+                        <strong>{{ resident.full_name }}</strong>
+                        <span>{{ resident.flat_no or 'No flat' }}{% if resident.wing %}, Wing {{ resident.wing }}{% endif %}</span>
+                        <em>{{ resident.tower_name or 'Society' }}</em>
+                        <small>{{ resident.phone or resident.email or resident.username }}</small>
+                    </div>
+                {% else %}
+                    <div class="empty-state compact-empty">No matching residents found.</div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section id="requests" class="workspace-panel">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">Status</span>
+                    <h3>Visitor Request Board</h3>
+                    <p>Use the Pass ID after approval, then check visitors in and out.</p>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Visitor</th>
+                            <th>Resident</th>
+                            <th>Purpose</th>
+                            <th>Status</th>
+                            <th>Pass ID</th>
+                            <th>Gate Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for visitor in visitor_requests %}
+                        <tr>
+                            <td>
+                                <strong>{{ visitor.visitor_name }}</strong>
+                                <br><span class="muted">{{ visitor.visitor_phone or '-' }}</span>
+                            </td>
+                            <td>
+                                {{ visitor.resident_full_name or visitor.resident_name or '-' }}
+                                <br><span class="muted">{{ visitor.flat_no or '-' }}</span>
+                            </td>
+                            <td>
+                                {{ visitor.purpose or '-' }}
+                                {% if visitor.vehicle_number %}<br><span class="muted">{{ visitor.vehicle_number }}</span>{% endif %}
+                            </td>
+                            <td><span class="badge badge-{{ visitor.pass_status_key }}">{{ visitor.pass_status }}</span></td>
+                            <td><strong>{{ visitor.token or '-' }}</strong></td>
+                            <td>
+                                <div class="action-group">
+                                    {% if visitor.status == 'approved' and not visitor.check_in_at %}
+                                        <form action="{{ url_for('check_in_visitor', visitor_id=visitor.id) }}" method="post">
+                                            <button class="btn btn-sm btn-success" type="submit">Check In</button>
+                                        </form>
+                                    {% elif visitor.status == 'approved' and visitor.check_in_at and not visitor.check_out_at %}
+                                        <form action="{{ url_for('check_out_visitor', visitor_id=visitor.id) }}" method="post">
+                                            <button class="btn btn-sm btn-outline" type="submit">Check Out</button>
+                                        </form>
+                                    {% elif visitor.status == 'pending' %}
+                                        <span class="muted">Awaiting resident</span>
+                                    {% elif visitor.status == 'rejected' %}
+                                        <span class="muted">Entry denied</span>
+                                    {% else %}
+                                        <span class="muted">Complete</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="6">No visitor requests yet.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="movement" class="workspace-panel">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">Gate Log</span>
+                    <h3>Check-in / Check-out</h3>
+                    <p>Generate approved visitor passes and record gate movement.</p>
+                </div>
+            </div>
+
+            <div class="pass-panel">
+                <div class="pass-panel-header">
+                    <div>
+                        <span class="eyebrow">Visitor Pass</span>
+                        <h4>Entry Pass</h4>
+                        <p class="muted">Digital Pass for approved visitors.</p>
+                    </div>
+                    <form method="get" action="{{ url_for('guard_dashboard') }}#movement" class="pass-search-row">
+                        <input name="pass_search" value="{{ pass_search }}" placeholder="Enter Pass ID">
+                        <button class="btn btn-outline" type="submit">Search Pass by ID</button>
+                    </form>
+                </div>
+
+                {% if pass_search %}
+                    <p class="small-text">Showing Visitor Pass results for <strong>{{ pass_search }}</strong>.</p>
+                {% endif %}
+
+                <div class="pass-card-grid">
+                    {% for visitor in pass_records %}
+                        <article class="visitor-pass-card">
+                            <div class="pass-card-top">
+                                <div>
+                                    <span class="pass-label">Visitor Pass</span>
+                                    <strong>{{ visitor.visitor_name }}</strong>
+                                    <small>Pass ID {{ visitor.pass_id }}</small>
+                                </div>
+                                <span class="badge badge-{{ visitor.pass_status_key }}">{{ visitor.pass_status }}</span>
+                            </div>
+
+                            <div class="pass-badges">
+                                <span>Entry Pass</span>
+                                <span>Digital Pass</span>
+                            </div>
+
+                            <div class="pass-detail-grid">
+                                <div>
+                                    <span>Phone</span>
+                                    <strong>{{ visitor.visitor_phone or '-' }}</strong>
+                                </div>
+                                <div>
+                                    <span>Person to meet</span>
+                                    <strong>{{ visitor.resident_full_name or visitor.resident_name or '-' }}</strong>
+                                </div>
+                                <div>
+                                    <span>Flat</span>
+                                    <strong>{{ visitor.flat_no or '-' }}</strong>
+                                </div>
+                                <div>
+                                    <span>Valid until</span>
+                                    <strong>{{ visitor.pass_valid_until_display }}</strong>
+                                </div>
+                            </div>
+
+                            <div class="pass-actions">
+                                <form action="{{ url_for('generate_visitor_pass', visitor_id=visitor.id) }}" method="post">
+                                    <button class="btn btn-sm {% if visitor.pass_is_generated and not visitor.pass_is_expired %}btn-outline{% endif %}" type="submit" {% if visitor.check_out_at or (visitor.pass_is_generated and not visitor.pass_is_expired) %}disabled{% endif %}>Generate Pass</button>
+                                </form>
+
+                                {% if visitor.pass_is_generated %}
+                                    <a class="btn btn-sm btn-outline" href="{{ url_for('visitor_pass_pdf', visitor_id=visitor.id, download=1) }}">Download PDF</a>
+                                    <a class="btn btn-sm btn-outline" href="{{ url_for('visitor_pass_pdf', visitor_id=visitor.id) }}" target="_blank">Print Pass</a>
+                                    <a class="btn btn-sm btn-outline" href="{{ url_for('view_visitor_pass', visitor_id=visitor.id) }}">View Pass</a>
+                                {% else %}
+                                    <button class="btn btn-sm btn-outline" type="button" disabled>Download PDF</button>
+                                    <button class="btn btn-sm btn-outline" type="button" disabled>Print Pass</button>
+                                    <button class="btn btn-sm btn-outline" type="button" disabled>View Pass</button>
+                                {% endif %}
+
+                                {% if visitor.status == 'approved' and not visitor.check_in_at %}
+                                    <form action="{{ url_for('check_in_visitor', visitor_id=visitor.id) }}" method="post">
+                                        <button class="btn btn-sm btn-success" type="submit">Check In</button>
+                                    </form>
+                                {% else %}
+                                    <button class="btn btn-sm btn-outline" type="button" disabled>Check In</button>
+                                {% endif %}
+
+                                {% if visitor.status == 'approved' and visitor.check_in_at and not visitor.check_out_at %}
+                                    <form action="{{ url_for('check_out_visitor', visitor_id=visitor.id) }}" method="post">
+                                        <button class="btn btn-sm btn-outline" type="submit">Check Out</button>
+                                    </form>
+                                {% else %}
+                                    <button class="btn btn-sm btn-outline" type="button" disabled>Check Out</button>
+                                {% endif %}
+                            </div>
+                        </article>
+                    {% else %}
+                        <div class="empty-state compact-empty">No approved visitor passes found.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <h4 class="subheading">Recent Gate Movement</h4>
+            <div class="timeline">
+                {% for visitor in visitor_requests if visitor.check_in_at or visitor.check_out_at %}
+                    <div class="timeline-item">
+                        <strong>{{ visitor.visitor_name }} for {{ visitor.resident_full_name or visitor.resident_name or '-' }}</strong>
+                        <span>Pass ID {{ visitor.token or '-' }} &middot; {{ visitor.pass_status }}</span>
+                        <p>In: {{ visitor.check_in_at or '-' }} &middot; Out: {{ visitor.check_out_at or '-' }}</p>
+                    </div>
+                {% else %}
+                    <div class="empty-state compact-empty">No gate movement recorded yet.</div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section id="emergency" class="workspace-panel">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">Alert</span>
+                    <h3>Emergency Message</h3>
+                    <p>Raise an urgent alert for admin review.</p>
+                </div>
+            </div>
+
+            <form action="{{ url_for('emergency_alert') }}" method="post" class="notice-form">
+                <textarea name="message" placeholder="Describe the emergency or leave blank for a default gate alert"></textarea>
+                <button type="submit" class="btn btn-danger">Raise Alert</button>
+            </form>
+
+            {% if alerts %}
+                <div class="notice-feed compact-feed">
+                    {% for alert in alerts %}
+                        <div class="feed-item">
+                            <strong>{{ alert.message }}</strong>
+                            <span>{{ alert.status|title }} &middot; {{ alert.created_at }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}

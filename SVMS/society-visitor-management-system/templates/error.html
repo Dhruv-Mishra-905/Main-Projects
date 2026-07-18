@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}Error - SVMS{% endblock %}
+
+{% block content %}
+<div class="card card-narrow text-center">
+    <div class="card-header">
+        <h2>Something went wrong</h2>
+        <p>{{ message }}</p>
+    </div>
+    <a class="btn" href="{{ url_for('login') }}">Return to Login</a>
+</div>
+{% endblock %}

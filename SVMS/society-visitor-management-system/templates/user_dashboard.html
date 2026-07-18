@@ -1,0 +1,271 @@
+{% extends 'base.html' %}
+
+{% block title %}Resident Dashboard - SVMS{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div>
+        <span class="role-chip">Resident</span>
+        <h2>Resident Dashboard</h2>
+        <p>Welcome, {{ user.full_name or username }}. Approve visitors, create meeting requests, and check your access history.</p>
+    </div>
+    <div class="header-actions">
+        <a href="#visitor-requests" class="btn">Visitors</a>
+        <a href="{{ url_for('profile') }}" class="btn btn-outline">Profile</a>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <span class="stat-kicker">Pending</span>
+        <div class="stat-value">{{ stats.pending_visitors }}</div>
+        <div class="stat-label">Visitor requests</div>
+    </div>
+    <div class="stat-card">
+        <span class="stat-kicker">Approved</span>
+        <div class="stat-value">{{ stats.approved_visitors }}</div>
+        <div class="stat-label">Active passes</div>
+    </div>
+    <div class="stat-card">
+        <span class="stat-kicker">History</span>
+        <div class="stat-value">{{ stats.history }}</div>
+        <div class="stat-label">Completed visits</div>
+    </div>
+    <div class="stat-card">
+        <span class="stat-kicker">Meetings</span>
+        <div class="stat-value">{{ stats.meetings }}</div>
+        <div class="stat-label">Total requests</div>
+    </div>
+</div>
+
+<div class="dashboard-layout">
+    <aside class="side-panel">
+        <div class="side-panel-title">Resident Tools</div>
+        <a href="#visitor-requests">Visitor requests</a>
+        <a href="#approved-visits">Approved passes</a>
+        <a href="#meeting-form">New meeting</a>
+        <a href="#meeting-requests">Meetings</a>
+        <a href="#history">History</a>
+        <a href="#profile-summary">Profile</a>
+    </aside>
+
+    <div class="workspace-stack">
+        <section id="visitor-requests" class="workspace-panel">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">Gate</span>
+                    <h3>Approve or Reject Visitors</h3>
+                    <p>Pending visitors appear here as soon as the guard creates a request.</p>
+                </div>
+            </div>
+
+            <div class="request-card-grid">
+                {% for visitor in visitor_requests if visitor.status == 'pending' %}
+                    <div class="request-card">
+                        <div class="request-card-top">
+                            <span class="badge badge-pending">Pending</span>
+                            <span>{{ visitor.created_at }}</span>
+                        </div>
+                        <h4>{{ visitor.visitor_name }}</h4>
+                        <p>{{ visitor.purpose or 'Visitor at gate' }}</p>
+                        <div class="request-meta">
+                            <span>Phone: {{ visitor.visitor_phone or '-' }}</span>
+                            <span>Guard: {{ visitor.guard_name or 'Gate desk' }}</span>
+                            {% if visitor.vehicle_number %}<span>Vehicle: {{ visitor.vehicle_number }}</span>{% endif %}
+                        </div>
+                        <div class="action-group">
+                            <form action="{{ url_for('decide_visitor', visitor_id=visitor.id) }}" method="post">
+                                <input type="hidden" name="action" value="approved">
+                                <button class="btn btn-sm btn-success" type="submit">Approve</button>
+                            </form>
+                            <form action="{{ url_for('decide_visitor', visitor_id=visitor.id) }}" method="post">
+                                <input type="hidden" name="action" value="rejected">
+                                <button class="btn btn-sm btn-danger" type="submit">Reject</button>
+                            </form>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="empty-state compact-empty">No pending visitor requests.</div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section id="approved-visits" class="workspace-panel">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">Passes</span>
+                    <h3>Approved Visitors</h3>
+                    <p>Share the token with the guard desk when a visitor arrives.</p>
+                </div>
+            </div>
+
+            <div class="mini-grid">
+                {% for visitor in visitor_requests if visitor.status == 'approved' %}
+                    <div class="mini-card">
+                        <span class="badge badge-approved">Approved</span>
+                        <strong>{{ visitor.visitor_name }}</strong>
+                        <span>{{ visitor.purpose or 'Visit' }}</span>
+                        <em>Token: {{ visitor.token or '-' }}</em>
+                        <small>In: {{ visitor.check_in_at or 'Not checked in' }}</small>
+                    </div>
+                {% else %}
+                    <div class="empty-state compact-empty">No approved visitor passes right now.</div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section id="meeting-form" class="workspace-panel">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">Meetings</span>
+                    <h3>Create Meeting Request</h3>
+                    <p>Request a meeting with another resident or admin.</p>
+                </div>
+            </div>
+
+            <form action="{{ url_for('add_meeting_request') }}" method="post" class="form-grid-large">
+                <div class="form-group">
+                    <label for="target_user_id">Meet Resident</label>
+                    <select id="target_user_id" name="target_user_id" required>
+                        <option value="">Select resident</option>
+                        {% for resident in residents %}
+                            <option value="{{ resident.id }}">{{ resident.full_name }} - {{ resident.flat_no or 'No flat' }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="requested_date">Date</label>
+                    <input type="date" id="requested_date" name="requested_date">
+                </div>
+                <div class="form-group">
+                    <label for="requested_time">Time</label>
+                    <input type="time" id="requested_time" name="requested_time">
+                </div>
+                <div class="form-group span-2">
+                    <label for="purpose">Purpose</label>
+                    <textarea id="purpose" name="purpose" placeholder="Reason for meeting" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>&nbsp;</label>
+                    <button type="submit" class="btn btn-block">Send Request</button>
+                </div>
+            </form>
+        </section>
+
+        <section id="meeting-requests" class="workspace-panel">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">Requests</span>
+                    <h3>Incoming and Outgoing Meetings</h3>
+                    <p>Approve incoming requests and track the ones you sent.</p>
+                </div>
+            </div>
+
+            <div class="split-grid">
+                <div>
+                    <h4 class="subheading">Incoming</h4>
+                    <div class="request-list">
+                        {% for meeting in incoming_meetings %}
+                            <div class="list-item">
+                                <div>
+                                    <strong>{{ meeting.requester_name }}</strong>
+                                    <span>{{ meeting.purpose }}</span>
+                                    <small>{{ meeting.requested_date or '-' }} {{ meeting.requested_time or '' }}</small>
+                                </div>
+                                <div>
+                                    <span class="badge badge-{{ meeting.status }}">{{ meeting.status|title }}</span>
+                                    {% if meeting.status == 'pending' %}
+                                        <div class="action-group">
+                                            <form action="{{ url_for('decide_meeting', meeting_id=meeting.id) }}" method="post">
+                                                <input type="hidden" name="action" value="approved">
+                                                <button class="btn btn-sm btn-success" type="submit">Approve</button>
+                                            </form>
+                                            <form action="{{ url_for('decide_meeting', meeting_id=meeting.id) }}" method="post">
+                                                <input type="hidden" name="action" value="rejected">
+                                                <button class="btn btn-sm btn-danger" type="submit">Reject</button>
+                                            </form>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% else %}
+                            <p class="muted">No incoming meetings.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="subheading">Outgoing</h4>
+                    <div class="request-list">
+                        {% for meeting in outgoing_meetings %}
+                            <div class="list-item">
+                                <div>
+                                    <strong>{{ meeting.target_name }}</strong>
+                                    <span>{{ meeting.purpose }}</span>
+                                    <small>{{ meeting.requested_date or '-' }} {{ meeting.requested_time or '' }}</small>
+                                </div>
+                                <span class="badge badge-{{ meeting.status }}">{{ meeting.status|title }}</span>
+                            </div>
+                        {% else %}
+                            <p class="muted">No outgoing meetings.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="history" class="workspace-panel">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">History</span>
+                    <h3>Visitor Activity</h3>
+                    <p>Completed, rejected, and approved visitor records.</p>
+                </div>
+            </div>
+
+            <div class="timeline">
+                {% for visitor in visitor_requests if visitor.status != 'pending' %}
+                    <div class="timeline-item">
+                        <strong>{{ visitor.visitor_name }} <span class="badge badge-{{ visitor.status }}">{{ visitor.status|title }}</span></strong>
+                        <span>{{ visitor.purpose or 'Visit' }} &middot; Token {{ visitor.token or '-' }}</span>
+                        <p>In: {{ visitor.check_in_at or '-' }} &middot; Out: {{ visitor.check_out_at or '-' }}</p>
+                    </div>
+                {% else %}
+                    <div class="empty-state compact-empty">No visitor history yet.</div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section id="profile-summary" class="workspace-panel">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">Account</span>
+                    <h3>Profile Summary</h3>
+                    <p>Your flat and contact details used for gate approvals.</p>
+                </div>
+                <a href="{{ url_for('profile') }}" class="btn btn-sm btn-outline">Update</a>
+            </div>
+
+            <div class="profile-summary-grid">
+                <div><span>Name</span><strong>{{ user.full_name or username }}</strong></div>
+                <div><span>Flat</span><strong>{{ user.flat_no or '-' }}</strong></div>
+                <div><span>Tower</span><strong>{{ user.tower_name or '-' }}</strong></div>
+                <div><span>Phone</span><strong>{{ user.phone or '-' }}</strong></div>
+            </div>
+
+            <div class="notice-feed compact-feed">
+                <h4>Recent Notices</h4>
+                {% for notice in notices %}
+                    <div class="feed-item">
+                        <strong>{{ notice.title }}</strong>
+                        <span>{{ notice.category|title }} &middot; {{ notice.created_at }}</span>
+                        <p>{{ notice.body }}</p>
+                    </div>
+                {% else %}
+                    <p class="muted">No notices yet.</p>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}

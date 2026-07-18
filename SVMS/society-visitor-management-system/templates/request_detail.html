@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Registration Details - SVMS{% endblock %}
+
+{% block content %}
+<div class="card card-wide">
+    <div class="card-header">
+        <h2>Registration Review</h2>
+        <p>
+            Request #{{ req.id }} &middot;
+            <span class="status-pill status-{{ req.account_status }}">{{ req.account_status|capitalize }}</span>
+        </p>
+    </div>
+
+    {% if req %}
+        <div class="detail-grid">
+            <div class="detail-section">
+                <h3>Personal Information</h3>
+                <p><strong>Username:</strong> {{ req.username }}</p>
+                <p><strong>Full Name:</strong> {{ req.full_name or '-' }}</p>
+                <p><strong>DOB:</strong> {{ req.dob or '-' }}</p>
+                <p><strong>Gender:</strong> {{ req.gender or '-' }}</p>
+                <p><strong>Email:</strong> {{ req.email or '-' }}
+                    {% if req.email_verified %}<span class="badge badge-success">Verified</span>{% else %}<span class="badge badge-danger">Not Verified</span>{% endif %}
+                </p>
+                <p><strong>Phone:</strong> {{ req.phone or '-' }}
+                    {% if req.phone_verified %}<span class="badge badge-success">Verified</span>{% else %}<span class="badge badge-danger">Not Verified</span>{% endif %}
+                </p>
+                <p><strong>Alternate Phone:</strong> {{ req.alternate_phone or '-' }}</p>
+                <p><strong>Emergency:</strong> {{ req.emergency_contact_name or '-' }}{% if req.emergency_contact_number %} ({{ req.emergency_contact_number }}){% endif %}</p>
+            </div>
+
+            <div class="detail-section">
+                <h3>Identity Verification</h3>
+                <p><strong>Aadhaar:</strong> {{ req.aadhaar_number or '-' }}</p>
+                <p><strong>PAN:</strong> {{ req.pan_number or '-' }}</p>
+                {% if req.profile_photo %}
+                    <p><strong>Profile Photo:</strong> <a class="doc-link" href="{{ url_for('static', filename='uploads/' + req.profile_photo) }}" target="_blank">View Document</a></p>
+                {% endif %}
+                {% if req.aadhaar_front %}
+                    <p><strong>Aadhaar Front:</strong> <a class="doc-link" href="{{ url_for('static', filename='uploads/' + req.aadhaar_front) }}" target="_blank">View Document</a></p>
+                {% endif %}
+                {% if req.aadhaar_back %}
+                    <p><strong>Aadhaar Back:</strong> <a class="doc-link" href="{{ url_for('static', filename='uploads/' + req.aadhaar_back) }}" target="_blank">View Document</a></p>
+                {% endif %}
+                {% if req.id_document %}
+                    <p><strong>{{ req.id_document_type or 'Government ID' }}:</strong> <a class="doc-link" href="{{ url_for('static', filename='uploads/' + req.id_document) }}" target="_blank">View Document</a></p>
+                {% endif %}
+                {% if req.selfie %}
+                    <p><strong>Selfie:</strong> <a class="doc-link" href="{{ url_for('static', filename='uploads/' + req.selfie) }}" target="_blank">View Document</a></p>
+                {% endif %}
+            </div>
+
+            <div class="detail-section">
+                <h3>Apartment</h3>
+                <p><strong>Tower:</strong> {{ req.tower_name or '-' }}</p>
+                <p><strong>Wing:</strong> {{ req.wing or '-' }}</p>
+                <p><strong>Floor:</strong> {{ req.floor_no or '-' }}</p>
+                <p><strong>Flat:</strong> {{ req.flat_no or '-' }}</p>
+                <p><strong>Ownership:</strong> {{ req.ownership_type or '-' }}</p>
+                <p><strong>Move-in:</strong> {{ req.move_in_date or '-' }}</p>
+                <p><strong>Family Members:</strong> {{ req.num_family_members or '-' }}</p>
+                <p><strong>Vehicles:</strong> {{ req.vehicle_count or 0 }}</p>
+            </div>
+
+            <div class="detail-section">
+                <h3>Address</h3>
+                <p><strong>Address:</strong> {{ req.address or '-' }}</p>
+                <p><strong>City:</strong> {{ req.city or '-' }}</p>
+                <p><strong>State:</strong> {{ req.state or '-' }}</p>
+                <p><strong>PIN:</strong> {{ req.pincode or '-' }}</p>
+                <p><strong>Country:</strong> {{ req.country or '-' }}</p>
+            </div>
+        </div>
+
+        {% if session.get('role') == 'owner' %}
+            <div class="divider"></div>
+            <div class="action-group action-group-center">
+                <form action="{{ url_for('approve_request', req_id=req.id) }}" method="post">
+                    <button type="submit" class="btn btn-success">Approve Registration</button>
+                </form>
+                <form action="{{ url_for('reject_request', req_id=req.id) }}" method="post">
+                    <button type="submit" class="btn btn-danger">Reject Registration</button>
+                </form>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="empty-state">
+            <p>Request not found.</p>
+        </div>
+    {% endif %}
+
+    <p class="small-text text-center page-link-row">
+        <a href="{{ url_for('owner_dashboard' if session.get('role') == 'owner' else 'guard_dashboard') }}" class="text-link">Back to Dashboard</a>
+    </p>
+</div>
+{% endblock %}

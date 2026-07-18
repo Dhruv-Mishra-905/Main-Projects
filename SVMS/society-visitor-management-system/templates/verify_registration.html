@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Verify Registration - SVMS{% endblock %}
+
+{% block content %}
+<div class="card card-narrow">
+    <div class="card-header text-center">
+        <h2>Verify Registration</h2>
+        <p>Enter the OTP codes sent to your email and phone.</p>
+    </div>
+
+    <form action="{{ url_for('verify_registration', username=username) }}" method="post">
+        <div class="form-group">
+            <label>Email OTP</label>
+            <input type="text" name="email_otp" maxlength="6" pattern="[0-9]{6}" placeholder="6-digit code from email">
+            <p class="form-hint">Check your email inbox for the verification code.</p>
+        </div>
+
+        <div class="form-group">
+            <label>Phone OTP</label>
+            <input type="text" name="phone_otp" maxlength="6" pattern="[0-9]{6}" placeholder="6-digit code from SMS">
+            <p class="form-hint">Check your SMS messages for the verification code.</p>
+        </div>
+
+        <button type="submit" class="btn btn-success btn-block">Verify & Continue</button>
+    </form>
+
+    <p class="small-text text-center">
+        <a href="{{ url_for('login') }}" class="text-link">Back to Login</a>
+    </p>
+</div>
+{% endblock %}
